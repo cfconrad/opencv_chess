@@ -34,7 +34,7 @@ int main()
   nChild = fork();
   if (0 == nChild)
   {
-      if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1)
+    if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1)
     {
       exit(errno);
     }
@@ -43,34 +43,32 @@ int main()
     {
       exit(11);
     }
-    close(aStdoutPipe[PIPE_WRITE]);
+    close(aStdinPipe[PIPE_READ]);
+    close(aStdinPipe[PIPE_WRITE]);
     close(aStdoutPipe[PIPE_READ]);
-#if 0
-    // redirect stderr
-    if (dup2(aStdoutPipe[PIPE_WRITE], STDERR_FILENO) == -1)
-    {
-      exit(errno);
-    }
-#endif
-    cout << "TEST" << endl;
-
-    char *const args[] = {"echo", "foo", NULL};
-    int nResult = execvp("echo", args);
+    close(aStdoutPipe[PIPE_WRITE]);
+    char arg1[] = "/usr/bin/xboard";
+    char arg2[] = "-ncp";
+    char arg3[] = "-lpf";
+    char arg4[] = "/home/asmorodskyi/Downloads/test.fen";
+    char *const args[] = {arg1, arg2, arg3,arg4,NULL};
+    int nResult = execvp(arg1, args);
     exit(nResult);
   }
   else
   {
-    //char *szMessage = new char(sizeof("setboard 8/8/8/1p6/4P3/k3P3/8/3K4 w - - 0 1"));
-    //write(aStdinPipe[PIPE_WRITE], szMessage, strlen(szMessage));
-    int status;
-
-    cout << endl;
     char bufr[1];
+    string str = string("");
+    close(aStdinPipe[PIPE_READ]);
+    close(aStdinPipe[PIPE_WRITE]);
+    close(aStdoutPipe[PIPE_WRITE]);
     while (read(aStdoutPipe[PIPE_READ], bufr, 1))
     {
-      printf("char: %c\n", *bufr);
+      str += bufr[0];
     }
-    int ret_code = waitpid(nChild, &status, 0);
-    printf("status : %d, retcode: %d",WEXITSTATUS(status),ret_code);
+    cout << "Output: " << endl
+         << str << endl;
+    int status;
+    waitpid(nChild, &status, 0);
   }
 }
