@@ -34,26 +34,27 @@ int main()
   nChild = fork();
   if (0 == nChild)
   {
-    if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1)
+      if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1)
     {
-
       exit(errno);
     }
-
     // redirect stdout
     if (dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1)
     {
-      exit(errno);
+      exit(11);
     }
-
+    close(aStdoutPipe[PIPE_WRITE]);
+    close(aStdoutPipe[PIPE_READ]);
+#if 0
     // redirect stderr
     if (dup2(aStdoutPipe[PIPE_WRITE], STDERR_FILENO) == -1)
     {
       exit(errno);
     }
+#endif
     cout << "TEST" << endl;
 
-    char *const args[] = {"echo", "!!!!!!!!!!!!!!!!", NULL};
+    char *const args[] = {"echo", "foo", NULL};
     int nResult = execvp("echo", args);
     exit(nResult);
   }
@@ -62,14 +63,14 @@ int main()
     //char *szMessage = new char(sizeof("setboard 8/8/8/1p6/4P3/k3P3/8/3K4 w - - 0 1"));
     //write(aStdinPipe[PIPE_WRITE], szMessage, strlen(szMessage));
     int status;
-    int ret_code = waitpid(nChild, &status, 0);
 
-    printf("status : %d, retcode: %d",WEXITSTATUS(status),ret_code);
     cout << endl;
     char bufr[1];
     while (read(aStdoutPipe[PIPE_READ], bufr, 1))
     {
-      cout << strcat("xboard:", bufr) << endl;
+      printf("char: %c\n", *bufr);
     }
+    int ret_code = waitpid(nChild, &status, 0);
+    printf("status : %d, retcode: %d",WEXITSTATUS(status),ret_code);
   }
 }
